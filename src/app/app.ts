@@ -2,6 +2,7 @@ import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { RevealOnScrollDirective } from './directives/reveal-on-scroll';
 import { FormsModule } from '@angular/forms';
+import emailjs from '@emailjs/browser';
 
 @Component({
   selector: 'app-root',
@@ -58,21 +59,45 @@ export class App {
     return this.categories.find((cat) => cat.active);
   }
 
-  sendEmail() {
-    const subject = encodeURIComponent('Solicitação de orçamento - Synke');
+  isSending = false;
 
-    const body = encodeURIComponent(
-      `📩 NOVA MENSAGEM RECEBIDA\n\n` +
-        `DADOS DO CONTATO\n` +
-        `Nome: ${this.emailForm.name}\n` +
-        `Email: ${this.emailForm.email}\n\n` +
-        `MENSAGEM\n` +
-        `${this.emailForm.message}\n\n` +
-        `—\n` +
-        `Este contato foi enviado através do formulário do site.`
-    );
+  async sendEmail() {
+    if (!this.emailForm.name || !this.emailForm.email || !this.emailForm.message) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
 
-    window.location.href = `mailto:synke.services@gmail.com?subject=${subject}&body=${body}`;
+    this.isSending = true;
+
+    try {
+      // TODO: Configure suas credenciais do EmailJS aqui
+      // Crie uma conta gratuita em https://www.emailjs.com/
+      const SERVICE_ID = 'service_synke'; // Ex: service_x9...
+      const TEMPLATE_ID = 'template_synke'; // Ex: template_k2...
+      const PUBLIC_KEY = 'sM1Hhtvy67gExIKND'; // Ex: user_7d...
+
+      await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        {
+          from_name: this.emailForm.name,
+          from_email: this.emailForm.email,
+          message: this.emailForm.message,
+          reply_to: this.emailForm.email,
+        },
+        PUBLIC_KEY
+      );
+
+      alert('Mensagem enviada com sucesso! Entraremos em contato em breve.');
+      this.emailForm = { name: '', email: '', message: '' };
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      alert(
+        'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente ou entre em contato pelo WhatsApp.'
+      );
+    } finally {
+      this.isSending = false;
+    }
   }
 
   sendWhatsapp(): void {
@@ -82,6 +107,6 @@ export class App {
         'Aguardo seu retorno.'
     );
 
-    window.open(`https://wa.me/5546999381599?text=${message}`, '_blank');
+    window.open(`https://wa.me/5546999229131?text=${message}`, '_blank');
   }
 }
